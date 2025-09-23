@@ -1,0 +1,42 @@
+# Build Folders
+bin/
+obj/
+out/
+[Bb]uild/
+[Bb]uildOutput/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Rider
+.idea/
+
+# Logs
+*.log
+
+# Temp
+[Tt]emp/
+*.tmp
+
+# Auto-generated
+GeneratedFiles/
+_ReSharper*/
+
+# Secret files (never commit!)
+appsettings.Development.json
+appsettings.Local.json
+
+# Optional: ignore appsettings.json if it contains secrets
+# appsettings.json
+
+# Other
+*.db
+*.mdf
+*.ldf
