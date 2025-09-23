@@ -151,6 +151,70 @@ namespace EmployeeHierarchyAPI.Services
             await _context.SaveChangesAsync();
             return true;
         }
+        
+        public async Task<bool> DeletePositionCascadeAsync(Guid id)
+        {
+            var position = await _context.Positions.FindAsync(id);
+            if (position == null) return false;
+
+            // Get all descendant IDs recursively
+            var descendantIds = await GetAllDescendantIdsAsync(id);
+            
+            // Add the position itself to the list
+            descendantIds.Add(id);
+
+            // Delete all descendants and the position in a single transaction
+            var positionsToDelete = await _context.Positions
+                .Where(p => descendantIds.Contains(p.Id))
+                .ToListAsync();
+
+            _context.Positions.RemoveRange(positionsToDelete);
+            await _context.SaveChangesAsync();
+            
+            return true;
+        }
+
+        public async Task<bool> DeletePositionWithReassignmentAsync(Guid id)
+        {
+            var position = await _context.Positions
+                .Include(p => p.Children)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (position == null) return false;
+
+            // If position has children, reassign them to this position's parent
+            if (position.Children.Any())
+            {
+                foreach (var child in position.Children)
+                {
+                    child.ParentId = position.ParentId; // This could be null if deleting a root position
+                }
+            }
+
+            // Remove the position
+            _context.Positions.Remove(position);
+            await _context.SaveChangesAsync();
+            
+            return true;
+        }
+
+        private async Task<List<Guid>> GetAllDescendantIdsAsync(Guid parentId)
+        {
+            var descendantIds = new List<Guid>();
+            var directChildren = await _context.Positions
+                .Where(p => p.ParentId == parentId)
+                .Select(p => p.Id)
+                .ToListAsync();
+
+            foreach (var childId in directChildren)
+            {
+                descendantIds.Add(childId);
+                var childDescendants = await GetAllDescendantIdsAsync(childId);
+                descendantIds.AddRange(childDescendants);
+            }
+
+            return descendantIds;
+        }
 
         private async Task<bool> WouldCreateCircularReference(Guid positionId, Guid newParentId)
         {
@@ -158,7 +222,7 @@ namespace EmployeeHierarchyAPI.Services
             while (currentId.HasValue)
             {
                 if (currentId.Value == positionId) return true;
-                
+
                 var parent = await _context.Positions.FindAsync(currentId.Value);
                 currentId = parent?.ParentId;
             }

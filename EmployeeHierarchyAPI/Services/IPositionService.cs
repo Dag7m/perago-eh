@@ -11,5 +11,7 @@ namespace EmployeeHierarchyAPI.Services
         Task<List<PositionDto>> GetChildrenAsync(Guid parentId);
         Task<PositionDto?> UpdatePositionAsync(Guid id, CreatePositionDto updateDto);
         Task<bool> DeletePositionAsync(Guid id);
+        Task<bool> DeletePositionCascadeAsync(Guid id);
+        Task<bool> DeletePositionWithReassignmentAsync(Guid id);
     }
 }

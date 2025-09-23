@@ -87,5 +87,34 @@ namespace EmployeeHierarchyAPI.Controllers
                 return BadRequest(ex.Message);
             }
         }
+        [HttpDelete("{id}/cascade")]
+        public async Task<IActionResult> DeletePositionCascade(Guid id)
+        {
+            try
+            {
+                var deleted = await _positionService.DeletePositionCascadeAsync(id);
+                if (!deleted) return NotFound();
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error during cascade delete: {ex.Message}");
+            }
+        }
+
+        [HttpDelete("{id}/reassign")]
+        public async Task<IActionResult> DeletePositionWithReassignment(Guid id)
+        {
+            try
+            {
+                var deleted = await _positionService.DeletePositionWithReassignmentAsync(id);
+                if (!deleted) return NotFound();
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error during delete with reassignment: {ex.Message}");
+            }
+        }
     }
 }
