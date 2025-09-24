@@ -8,13 +8,19 @@ import type { Position, CreatePositionDto } from "../models/position.model"
 })
 export class PositionService {
   private http = inject(HttpClient)
-  private apiUrl = "http://localhost:5063/api/Positions" // Update with your API URL
+  private apiUrl = "http://localhost:5063/api/positions" // Update with your API URL
 
   private positionsSubject = new BehaviorSubject<Position[]>([])
   public positions$ = this.positionsSubject.asObservable()
 
   private selectedPositionSubject = new BehaviorSubject<Position | null>(null)
   public selectedPosition$ = this.selectedPositionSubject.asObservable()
+
+  private editModeSubject = new BehaviorSubject<boolean>(false)
+  public editMode$ = this.editModeSubject.asObservable()
+
+  private deleteRequestSubject = new BehaviorSubject<Position | null>(null)
+  public deleteRequest$ = this.deleteRequestSubject.asObservable()
 
   getAllPositions(): Observable<Position[]> {
     return this.http.get<Position[]>(this.apiUrl).pipe(tap((positions) => this.positionsSubject.next(positions)))
@@ -52,6 +58,17 @@ export class PositionService {
 
   selectPosition(position: Position | null): void {
     this.selectedPositionSubject.next(position)
+    if (!position) {
+      this.editModeSubject.next(false)
+    }
+  }
+
+  setEditMode(editing: boolean): void {
+    this.editModeSubject.next(editing)
+  }
+
+  requestDelete(position: Position): void {
+    this.deleteRequestSubject.next(position)
   }
 
   refreshPositions(): void {

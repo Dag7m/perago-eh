@@ -1,4 +1,4 @@
-import { Component, inject, type OnInit, signal } from "@angular/core"
+import { Component, inject, type OnInit, signal, Output, EventEmitter } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { MatTreeModule, MatTreeNestedDataSource } from "@angular/material/tree"
 import { MatIconModule } from "@angular/material/icon"
@@ -37,10 +37,12 @@ import { PositionService } from "../../services/position.service"
                     <span class="node-description">{{ node.description }}</span>
                   </div>
                   <div class="node-actions">
-                    <button mat-icon-button (click)="editPosition(node); $event.stopPropagation()">
+                    <button mat-icon-button (click)="editPosition(node); $event.stopPropagation()" 
+                            matTooltip="Edit Position">
                       <mat-icon>edit</mat-icon>
                     </button>
-                    <button mat-icon-button color="warn" (click)="deletePosition(node); $event.stopPropagation()">
+                    <button mat-icon-button color="warn" (click)="onDeletePosition(node); $event.stopPropagation()"
+                            matTooltip="Delete Position">
                       <mat-icon>delete</mat-icon>
                     </button>
                   </div>
@@ -65,10 +67,12 @@ import { PositionService } from "../../services/position.service"
                       <span class="node-description">{{ node.description }}</span>
                     </div>
                     <div class="node-actions">
-                      <button mat-icon-button (click)="editPosition(node); $event.stopPropagation()">
+                      <button mat-icon-button (click)="editPosition(node); $event.stopPropagation()"
+                              matTooltip="Edit Position">
                         <mat-icon>edit</mat-icon>
                       </button>
-                      <button mat-icon-button color="warn" (click)="deletePosition(node); $event.stopPropagation()">
+                      <button mat-icon-button color="warn" (click)="onDeletePosition(node); $event.stopPropagation()"
+                              matTooltip="Delete Position">
                         <mat-icon>delete</mat-icon>
                       </button>
                     </div>
@@ -101,16 +105,25 @@ import { PositionService } from "../../services/position.service"
       display: none;
     }
 
+    .mat-tree-node {
+      display: flex;
+      align-items: center;
+      min-height: 48px;
+      padding-left: 8px;
+    }
+
     .node-content {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px 12px;
-      margin: 4px 0;
+      flex: 1;
+      padding: 12px 16px;
+      margin: 2px 0;
       border-radius: 8px;
       cursor: pointer;
       transition: all 0.2s ease;
       border: 2px solid transparent;
+      min-height: 44px;
     }
 
     .node-content:hover {
@@ -126,18 +139,25 @@ import { PositionService } from "../../services/position.service"
       display: flex;
       flex-direction: column;
       flex: 1;
+      min-width: 0;
     }
 
     .node-name {
       font-weight: 500;
       font-size: 14px;
       color: #333;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .node-description {
       font-size: 12px;
       color: #666;
       margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .node-actions {
@@ -145,9 +165,14 @@ import { PositionService } from "../../services/position.service"
       gap: 4px;
       opacity: 0;
       transition: opacity 0.2s ease;
+      flex-shrink: 0;
     }
 
     .node-content:hover .node-actions {
+      opacity: 1;
+    }
+
+    .node-content.selected .node-actions {
       opacity: 1;
     }
 
@@ -172,6 +197,13 @@ import { PositionService } from "../../services/position.service"
       margin-top: 0;
       margin-bottom: 0;
       list-style-type: none;
+      padding-left: 0;
+    }
+
+    mat-nested-tree-node ul {
+      padding-left: 40px;
+      border-left: 1px dashed #ddd;
+      margin-left: 20px;
     }
   `,
   ],
@@ -182,6 +214,8 @@ export class PositionTreeComponent implements OnInit {
   treeControl = new NestedTreeControl<Position>((node) => node.children)
   dataSource = new MatTreeNestedDataSource<Position>()
   selectedPosition = signal<Position | null>(null)
+
+  @Output() deleteRequested = new EventEmitter<Position>()
 
   ngOnInit(): void {
     this.positionService.positions$.subscribe((positions) => {
@@ -203,11 +237,11 @@ export class PositionTreeComponent implements OnInit {
   }
 
   editPosition(position: Position): void {
+    this.positionService.setEditMode(true)
     this.positionService.selectPosition(position)
   }
 
-  deletePosition(position: Position): void {
-    // This will be handled by the parent component
-    this.positionService.selectPosition(position)
+  onDeletePosition(position: Position): void {
+    this.deleteRequested.emit(position)
   }
 }

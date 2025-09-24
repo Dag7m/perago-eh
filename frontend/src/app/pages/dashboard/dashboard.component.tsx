@@ -5,10 +5,14 @@ import { MatButtonModule } from "@angular/material/button"
 import { MatIconModule } from "@angular/material/icon"
 import { MatDialog } from "@angular/material/dialog"
 import { MatSnackBar } from "@angular/material/snack-bar"
+import { MatTabsModule } from "@angular/material/tabs"
+import { signal } from "@angular/core"
 
 import { PositionTreeComponent } from "../../components/position-tree/position-tree.component"
 import { PositionFormComponent } from "../../components/position-form/position-form.component"
 import { ConfirmDialogComponent } from "../../components/confirm-dialog/confirm-dialog.component"
+import { PositionDetailsComponent } from "../../components/position-details/position-details.component"
+import { PositionListComponent } from "../../components/position-list/position-list.component"
 import { PositionService } from "../../services/position.service"
 import type { Position, DeleteOptions } from "../../models/position.model"
 
@@ -20,8 +24,11 @@ import type { Position, DeleteOptions } from "../../models/position.model"
     MatToolbarModule,
     MatButtonModule,
     MatIconModule,
+    MatTabsModule,
     PositionTreeComponent,
     PositionFormComponent,
+    PositionDetailsComponent,
+    PositionListComponent,
   ],
   template: `
     <div class="dashboard-container">
@@ -38,15 +45,38 @@ import type { Position, DeleteOptions } from "../../models/position.model"
       </mat-toolbar>
 
       <div class="main-content">
-        <div class="content-grid">
-          <div class="tree-section">
-            <app-position-tree></app-position-tree>
-          </div>
+        <mat-tab-group class="content-tabs" (selectedTabChange)="onTabChange($event)">
+          <mat-tab label="Hierarchy View">
+            <div class="tab-content">
+              <div class="content-grid">
+                <div class="tree-section">
+                  <app-position-tree (deleteRequested)="deletePosition($event)"></app-position-tree>
+                </div>
+                
+                <div class="details-section">
+                  @if (isEditMode()) {
+                    <app-position-form></app-position-form>
+                  } @else {
+                    <app-position-details></app-position-details>
+                  }
+                </div>
+              </div>
+            </div>
+          </mat-tab>
           
-          <div class="form-section">
-            <app-position-form></app-position-form>
-          </div>
-        </div>
+          <mat-tab label="List View">
+            <div class="tab-content">
+              <div class="list-layout">
+                <div class="list-section">
+                  <app-position-list></app-position-list>
+                </div>
+                <div class="form-section">
+                  <app-position-form></app-position-form>
+                </div>
+              </div>
+            </div>
+          </mat-tab>
+        </mat-tab-group>
       </div>
     </div>
   `,
@@ -81,6 +111,14 @@ import type { Position, DeleteOptions } from "../../models/position.model"
     .main-content {
       flex: 1;
       overflow: hidden;
+    }
+
+    .content-tabs {
+      height: 100%;
+    }
+
+    .tab-content {
+      height: calc(100vh - 112px);
       padding: 24px;
     }
 
@@ -93,27 +131,36 @@ import type { Position, DeleteOptions } from "../../models/position.model"
       margin: 0 auto;
     }
 
-    .tree-section {
+    .tree-section, .details-section {
       min-height: 0;
     }
 
-    .form-section {
+    .list-layout {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 24px;
+      height: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .list-section, .form-section {
       min-height: 0;
     }
 
     @media (max-width: 1024px) {
-      .content-grid {
+      .content-grid, .list-layout {
         grid-template-columns: 1fr;
         grid-template-rows: 1fr auto;
       }
       
-      .form-section {
+      .details-section, .form-section {
         order: -1;
       }
     }
 
     @media (max-width: 768px) {
-      .main-content {
+      .tab-content {
         padding: 16px;
       }
       
@@ -125,7 +172,7 @@ import type { Position, DeleteOptions } from "../../models/position.model"
         display: none;
       }
     }
-  `,
+    `,
   ],
 })
 export class DashboardComponent implements OnInit {
@@ -133,18 +180,29 @@ export class DashboardComponent implements OnInit {
   private dialog = inject(MatDialog)
   private snackBar = inject(MatSnackBar)
 
+  isEditMode = signal(false)
+
   ngOnInit(): void {
-    // Listen for position selection to handle delete operations
-    this.positionService.selectedPosition$.subscribe((position) => {
+    this.positionService.editMode$.subscribe((editMode) => {
+      this.isEditMode.set(editMode)
+    })
+
+    this.positionService.deleteRequest$.subscribe((position) => {
       if (position) {
-        // Check if this is a delete operation (you might want to add a flag for this)
-        // For now, we'll handle delete through a separate method
+        this.deletePosition(position)
       }
     })
   }
 
   createNewPosition(): void {
     this.positionService.selectPosition(null)
+    this.positionService.setEditMode(true)
+  }
+
+  onTabChange(event: any): void {
+    // Reset selection when switching tabs
+    this.positionService.selectPosition(null)
+    this.positionService.setEditMode(false)
   }
 
   deletePosition(position: Position): void {
