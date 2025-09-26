@@ -31,29 +31,30 @@ import type { Position, DeleteOptions } from "../../models/position.model"
     PositionListComponent,
   ],
   template: `
-    <div class="dashboard-container">
-      <mat-toolbar color="primary" class="app-toolbar">
-        <span class="app-title">
+    <div class="h-screen flex flex-col bg-gray-50">
+      <mat-toolbar color="primary" class="sticky top-0 z-50 shadow-md">
+        <span class="flex items-center gap-2 text-xl font-medium">
           <mat-icon>business</mat-icon>
-          Employee Hierarchy Manager
+          <span class="hidden sm:inline">Employee Hierarchy Manager</span>
+          <span class="sm:hidden">Hierarchy</span>
         </span>
-        <span class="spacer"></span>
-        <button mat-raised-button color="accent" (click)="createNewPosition()">
+        <span class="flex-1"></span>
+        <button mat-raised-button color="accent" (click)="createNewPosition()" class="flex items-center gap-2">
           <mat-icon>add</mat-icon>
-          New Position
+          <span class="hidden sm:inline">New Position</span>
         </button>
       </mat-toolbar>
 
-      <div class="main-content">
-        <mat-tab-group class="content-tabs" (selectedTabChange)="onTabChange($event)">
+      <div class="flex-1 overflow-hidden">
+        <mat-tab-group class="h-full">
           <mat-tab label="Hierarchy View">
-            <div class="tab-content">
-              <div class="content-grid">
-                <div class="tree-section">
+            <div class="h-full p-6">
+              <div class="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6 h-full max-w-7xl mx-auto">
+                <div class="min-h-0">
                   <app-position-tree (deleteRequested)="deletePosition($event)"></app-position-tree>
                 </div>
                 
-                <div class="details-section">
+                <div class="min-h-0 order-first lg:order-last">
                   @if (isEditMode()) {
                     <app-position-form></app-position-form>
                   } @else {
@@ -65,12 +66,12 @@ import type { Position, DeleteOptions } from "../../models/position.model"
           </mat-tab>
           
           <mat-tab label="List View">
-            <div class="tab-content">
-              <div class="list-layout">
-                <div class="list-section">
+            <div class="h-full p-6">
+              <div class="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6 h-full max-w-7xl mx-auto">
+                <div class="min-h-0">
                   <app-position-list></app-position-list>
                 </div>
-                <div class="form-section">
+                <div class="min-h-0 order-first lg:order-last">
                   <app-position-form></app-position-form>
                 </div>
               </div>
@@ -80,100 +81,7 @@ import type { Position, DeleteOptions } from "../../models/position.model"
       </div>
     </div>
   `,
-  styles: [
-    `
-    .dashboard-container {
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      background-color: #f5f5f5;
-    }
-
-    .app-toolbar {
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .app-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 20px;
-      font-weight: 500;
-    }
-
-    .spacer {
-      flex: 1;
-    }
-
-    .main-content {
-      flex: 1;
-      overflow: hidden;
-    }
-
-    .content-tabs {
-      height: 100%;
-    }
-
-    .tab-content {
-      height: calc(100vh - 112px);
-      padding: 24px;
-    }
-
-    .content-grid {
-      display: grid;
-      grid-template-columns: 1fr 400px;
-      gap: 24px;
-      height: 100%;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    .tree-section, .details-section {
-      min-height: 0;
-    }
-
-    .list-layout {
-      display: grid;
-      grid-template-columns: 1fr 400px;
-      gap: 24px;
-      height: 100%;
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    .list-section, .form-section {
-      min-height: 0;
-    }
-
-    @media (max-width: 1024px) {
-      .content-grid, .list-layout {
-        grid-template-columns: 1fr;
-        grid-template-rows: 1fr auto;
-      }
-      
-      .details-section, .form-section {
-        order: -1;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .tab-content {
-        padding: 16px;
-      }
-      
-      .app-title {
-        font-size: 18px;
-      }
-      
-      .app-title mat-icon {
-        display: none;
-      }
-    }
-    `,
-  ],
+  styles: [],
 })
 export class DashboardComponent implements OnInit {
   private positionService = inject(PositionService)
@@ -200,7 +108,6 @@ export class DashboardComponent implements OnInit {
   }
 
   onTabChange(event: any): void {
-    // Reset selection when switching tabs
     this.positionService.selectPosition(null)
     this.positionService.setEditMode(false)
   }

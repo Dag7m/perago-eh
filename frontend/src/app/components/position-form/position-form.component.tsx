@@ -24,17 +24,17 @@ import { PositionService } from "../../services/position.service"
     MatButtonModule,
   ],
   template: `
-    <mat-card class="form-card">
+    <mat-card class="h-fit">
       <mat-card-header>
         <mat-card-title>
           {{ isEditing() ? 'Edit Position' : 'Create New Position' }}
         </mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        <form [formGroup]="positionForm" (ngSubmit)="onSubmit()" class="position-form">
-          <mat-form-field appearance="outline" class="full-width">
+        <form [formGroup]="positionForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-4 py-4">
+          <mat-form-field appearance="outline" class="w-full">
             <mat-label>Position Name</mat-label>
-            <input matInput formControlName="name" placeholder="e.g., CEO, CTO, Manager">
+            <input matInput class="focus:outline-none focus:ring-0" formControlName="name" placeholder="e.g., CEO, CTO, Manager">
             @if (positionForm.get('name')?.hasError('required') && positionForm.get('name')?.touched) {
               <mat-error>Position name is required</mat-error>
             }
@@ -43,17 +43,20 @@ import { PositionService } from "../../services/position.service"
             }
           </mat-form-field>
 
-          <mat-form-field appearance="outline" class="full-width">
+          <mat-form-field appearance="outline" class="w-full">
             <mat-label>Description</mat-label>
             <textarea matInput formControlName="description" 
                      placeholder="Brief description of the position"
-                     rows="3"></textarea>
+                     rows="3"
+                     class="focus:outline-none focus:ring-0"
+                     ></textarea>
+                     
             @if (positionForm.get('description')?.hasError('maxlength')) {
               <mat-error>Description cannot exceed 500 characters</mat-error>
             }
           </mat-form-field>
 
-          <mat-form-field appearance="outline" class="full-width">
+          <mat-form-field appearance="outline" class="w-full">
             <mat-label>Parent Position</mat-label>
             <mat-select formControlName="parentId">
               <mat-option [value]="null">No Parent (Root Position)</mat-option>
@@ -63,13 +66,14 @@ import { PositionService } from "../../services/position.service"
             </mat-select>
           </mat-form-field>
 
-          <div class="form-actions">
+          <div class="flex gap-3 mt-4">
             <button mat-raised-button color="primary" type="submit" 
-                    [disabled]="positionForm.invalid || isSubmitting()">
+                    [disabled]="positionForm.invalid || isSubmitting()"
+                    class="min-w-32">
               {{ isSubmitting() ? 'Saving...' : (isEditing() ? 'Update Position' : 'Create Position') }}
             </button>
             @if (isEditing()) {
-              <button mat-button type="button" (click)="cancelEdit()">
+              <button mat-button type="button" (click)="cancelEdit()" class="min-w-32">
                 Cancel
               </button>
             }
@@ -78,34 +82,7 @@ import { PositionService } from "../../services/position.service"
       </mat-card-content>
     </mat-card>
   `,
-  styles: [
-    `
-    .form-card {
-      height: fit-content;
-    }
-
-    .position-form {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      padding: 16px 0;
-    }
-
-    .full-width {
-      width: 100%;
-    }
-
-    .form-actions {
-      display: flex;
-      gap: 12px;
-      margin-top: 16px;
-    }
-
-    .form-actions button {
-      min-width: 120px;
-    }
-  `,
-  ],
+  styles: [],
 })
 export class PositionFormComponent implements OnInit {
   private fb = inject(FormBuilder)
@@ -144,7 +121,6 @@ export class PositionFormComponent implements OnInit {
     const flatPositions = this.flattenPositions(positions)
     const currentId = this.currentPosition()?.id
 
-    // Exclude current position and its descendants from parent options
     const available = flatPositions.filter(
       (p) => p.id !== currentId && !this.isDescendant(p.id, currentId, flatPositions),
     )

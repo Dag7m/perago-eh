@@ -1,6 +1,6 @@
 import { Injectable, inject } from "@angular/core"
 import { HttpClient } from "@angular/common/http"
-import { type Observable, BehaviorSubject, tap } from "rxjs"
+import { type Observable, BehaviorSubject, tap, map } from "rxjs"
 import type { Position, CreatePositionDto } from "../models/position.model"
 
 @Injectable({
@@ -22,14 +22,26 @@ export class PositionService {
   private deleteRequestSubject = new BehaviorSubject<Position | null>(null)
   public deleteRequest$ = this.deleteRequestSubject.asObservable()
 
+  private calculateLevels(positions: Position[], level = 0): Position[] {
+    return positions.map((position) => ({
+      ...position,
+      level,
+      children: position.children ? this.calculateLevels(position.children, level + 1) : [],
+    }))
+  }
+
   getAllPositions(): Observable<Position[]> {
-    return this.http.get<Position[]>(this.apiUrl).pipe(tap((positions) => this.positionsSubject.next(positions)))
+    return this.http.get<Position[]>(this.apiUrl).pipe(
+      map((positions) => this.calculateLevels(positions)),
+      tap((positions) => this.positionsSubject.next(positions)),
+    )
   }
 
   getHierarchy(): Observable<Position[]> {
-    return this.http
-      .get<Position[]>(`${this.apiUrl}/hierarchy`)
-      .pipe(tap((positions) => this.positionsSubject.next(positions)))
+    return this.http.get<Position[]>(`${this.apiUrl}/hierarchy`).pipe(
+      map((positions) => this.calculateLevels(positions)),
+      tap((positions) => this.positionsSubject.next(positions)),
+    )
   }
 
   getPosition(id: string): Observable<Position> {
@@ -72,6 +84,13 @@ export class PositionService {
   }
 
   refreshPositions(): void {
-    this.getHierarchy().subscribe()
+    this.getHierarchy().subscribe({
+      next: (positions) => {
+        console.log("[v0] Positions refreshed:", positions.length)
+      },
+      error: (error) => {
+        console.error("[v0] Error refreshing positions:", error)
+      },
+    })
   }
 }

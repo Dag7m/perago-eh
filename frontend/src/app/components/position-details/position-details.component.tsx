@@ -1,11 +1,10 @@
-import { Component, inject, signal, type OnInit } from "@angular/core"
+import { Component, inject } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { MatCardModule } from "@angular/material/card"
 import { MatButtonModule } from "@angular/material/button"
 import { MatIconModule } from "@angular/material/icon"
 import { MatChipsModule } from "@angular/material/chips"
 
-import type { Position } from "../../models/position.model"
 import { PositionService } from "../../services/position.service"
 
 @Component({
@@ -13,198 +12,121 @@ import { PositionService } from "../../services/position.service"
   standalone: true,
   imports: [CommonModule, MatCardModule, MatButtonModule, MatIconModule, MatChipsModule],
   template: `
-    <mat-card class="details-card">
+    <mat-card class="h-full flex flex-col">
       <mat-card-header>
         <mat-card-title>Position Details</mat-card-title>
       </mat-card-header>
-      <mat-card-content>
-        @if (selectedPosition()) {
-          <div class="position-details">
-            <div class="detail-section">
-              <h3 class="section-title">
-                <mat-icon>badge</mat-icon>
-                Position Information
-              </h3>
-              <div class="detail-item">
-                <label>Name:</label>
-                <span class="value">{{ selectedPosition()!.name }}</span>
+      <mat-card-content class="flex-1">
+        <div *ngIf="selectedPosition$ | async as position">
+          <div class="flex flex-col gap-5 mb-6">
+            <div class="flex items-start gap-3">
+              <mat-icon class="text-gray-600 mt-1">business_center</mat-icon>
+              <div class="flex flex-col gap-1 flex-1">
+                <label class="text-xs font-medium text-gray-600 uppercase tracking-wide">Position Name</label>
+                <span class="text-sm text-gray-800">{{ position.name }}</span>
               </div>
-              <div class="detail-item">
-                <label>Description:</label>
-                <span class="value">{{ selectedPosition()!.description || 'No description provided' }}</span>
-              </div>
-              @if (selectedPosition()!.parentName) {
-                <div class="detail-item">
-                  <label>Reports to:</label>
-                  <mat-chip class="parent-chip">{{ selectedPosition()!.parentName }}</mat-chip>
-                </div>
-              } @else {
-                <div class="detail-item">
-                  <label>Level:</label>
-                  <mat-chip class="root-chip">Root Position</mat-chip>
-                </div>
-              }
             </div>
-
-            @if (childrenCount() > 0) {
-              <div class="detail-section">
-                <h3 class="section-title">
-                  <mat-icon>group</mat-icon>
-                  Team Structure
-                </h3>
-                <div class="detail-item">
-                  <label>Direct Reports:</label>
-                  <span class="value">{{ childrenCount() }} position(s)</span>
-                </div>
-                <div class="children-list">
-                  @for (child of selectedPosition()!.children; track child.id) {
-                    <mat-chip class="child-chip">{{ child.name }}</mat-chip>
-                  }
-                </div>
+            
+            <div class="flex items-start gap-3">
+              <mat-icon class="text-gray-600 mt-1">description</mat-icon>
+              <div class="flex flex-col gap-1 flex-1">
+                <label class="text-xs font-medium text-gray-600 uppercase tracking-wide">Description</label>
+                <span class="text-sm text-gray-800">{{ position.description || 'No description provided' }}</span>
               </div>
-            }
-
-            <div class="actions-section">
-              <button mat-raised-button color="primary" (click)="editPosition()">
-                <mat-icon>edit</mat-icon>
-                Edit Position
-              </button>
+            </div>
+            
+            <div class="flex items-start gap-3">
+              <mat-icon class="text-gray-600 mt-1">account_tree</mat-icon>
+              <div class="flex flex-col gap-1 flex-1">
+                <label class="text-xs font-medium text-gray-600 uppercase tracking-wide">Hierarchy Level</label>
+                <mat-chip-set>
+                  <mat-chip [ngClass]="getLevelClass(position.level || 0)" class="text-white">
+                    {{ getLevelLabel(position.level || 0) }}
+                  </mat-chip>
+                </mat-chip-set>
+              </div>
+            </div>
+            
+            <div class="flex items-start gap-3" *ngIf="position.parentName">
+              <mat-icon class="text-gray-600 mt-1">supervisor_account</mat-icon>
+              <div class="flex flex-col gap-1 flex-1">
+                <label class="text-xs font-medium text-gray-600 uppercase tracking-wide">Reports To</label>
+                <span class="text-sm text-gray-800">{{ position.parentName }}</span>
+              </div>
+            </div>
+            
+            <div class="flex items-start gap-3" *ngIf="position.children && position.children.length > 0">
+              <mat-icon class="text-gray-600 mt-1">group</mat-icon>
+              <div class="flex flex-col gap-1 flex-1">
+                <label class="text-xs font-medium text-gray-600 uppercase tracking-wide">Direct Reports</label>
+                <span class="text-sm text-gray-800">{{ position.children.length }} position(s)</span>
+              </div>
             </div>
           </div>
-        } @else {
-          <div class="empty-state">
-            <mat-icon>info</mat-icon>
-            <p>Select a position from the hierarchy to view details</p>
+          
+          <div class="flex gap-3 mt-auto pt-4 border-t border-gray-200">
+            <button mat-raised-button color="primary" (click)="editPosition()" class="flex items-center gap-2">
+              <mat-icon>edit</mat-icon>
+              Edit Position
+            </button>
           </div>
-        }
+        </div>
+        <div *ngIf="!(selectedPosition$ | async)" class="flex flex-col items-center justify-center p-10 text-gray-500 text-center">
+          <mat-icon class="text-5xl w-12 h-12 mb-4 text-gray-300">info</mat-icon>
+          <p>Select a position from the tree to view details</p>
+        </div>
       </mat-card-content>
     </mat-card>
   `,
   styles: [
     `
-    .details-card {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
+    .bg-red-500 {
+      background-color: #ef4444 !important;
     }
-
-    .position-details {
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
+    .bg-orange-500 {
+      background-color: #f97316 !important;
     }
-
-    .detail-section {
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      padding: 16px;
+    .bg-blue-500 {
+      background-color: #3b82f6 !important;
     }
-
-    .section-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin: 0 0 16px 0;
-      font-size: 16px;
-      font-weight: 500;
-      color: #333;
+    .bg-green-500 {
+      background-color: #22c55e !important;
     }
-
-    .section-title mat-icon {
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
-      color: #2196f3;
+    .bg-purple-500 {
+      background-color: #a855f7 !important;
     }
-
-    .detail-item {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      margin-bottom: 12px;
-    }
-
-    .detail-item:last-child {
-      margin-bottom: 0;
-    }
-
-    .detail-item label {
-      font-weight: 500;
-      font-size: 14px;
-      color: #666;
-    }
-
-    .detail-item .value {
-      font-size: 16px;
-      color: #333;
-      line-height: 1.4;
-    }
-
-    .children-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    .parent-chip {
-      background-color: #e3f2fd;
-      color: #1976d2;
-    }
-
-    .root-chip {
-      background-color: #f3e5f5;
-      color: #7b1fa2;
-    }
-
-    .child-chip {
-      background-color: #e8f5e8;
-      color: #388e3c;
-    }
-
-    .actions-section {
-      display: flex;
-      gap: 12px;
-      padding-top: 16px;
-      border-top: 1px solid #e0e0e0;
-    }
-
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 40px;
-      color: #666;
-      text-align: center;
-    }
-
-    .empty-state mat-icon {
-      font-size: 48px;
-      width: 48px;
-      height: 48px;
-      margin-bottom: 16px;
-      color: #ccc;
-    }
-  `,
+    `,
   ],
 })
-export class PositionDetailsComponent implements OnInit {
+export class PositionDetailsComponent {
   private positionService = inject(PositionService)
 
-  selectedPosition = signal<Position | null>(null)
-  childrenCount = signal(0)
+  selectedPosition$ = this.positionService.selectedPosition$
 
-  ngOnInit(): void {
-    this.positionService.selectedPosition$.subscribe((position) => {
-      this.selectedPosition.set(position)
-      this.childrenCount.set(position?.children?.length || 0)
-    })
+  getLevelLabel(level: number): string {
+    switch (level) {
+      case 0:
+        return "CEO Level"
+      case 1:
+        return "Executive Level"
+      case 2:
+        return "Director Level"
+      case 3:
+        return "Manager Level"
+      default:
+        return `Level ${level}`
+    }
+  }
+
+  getLevelClass(level: number): string {
+    if (level === 0) return "bg-red-500"
+    if (level === 1) return "bg-orange-500"
+    if (level === 2) return "bg-blue-500"
+    if (level === 3) return "bg-green-500"
+    return "bg-purple-500"
   }
 
   editPosition(): void {
-    if (this.selectedPosition()) {
-      this.positionService.setEditMode(true)
-    }
+    this.positionService.setEditMode(true)
   }
 }

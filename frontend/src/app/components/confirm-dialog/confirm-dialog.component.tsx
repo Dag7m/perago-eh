@@ -13,41 +13,41 @@ import type { DeleteOptions } from "../../models/position.model"
   standalone: true,
   imports: [CommonModule, MatDialogModule, MatButtonModule, MatIconModule, MatRadioModule, ReactiveFormsModule],
   template: `
-    <div class="dialog-container">
-      <div class="dialog-header">
-        <mat-icon class="warning-icon">warning</mat-icon>
-        <h2 mat-dialog-title>Confirm Delete</h2>
+    <div class="min-w-96 max-w-2xl">
+      <div class="flex items-center gap-3 mb-4">
+        <mat-icon class="text-orange-500 text-4xl w-8 h-8">warning</mat-icon>
+        <h2 mat-dialog-title class="text-xl font-semibold">Confirm Delete</h2>
       </div>
       
-      <mat-dialog-content class="dialog-content">
-        <p class="position-info">
+      <mat-dialog-content class="px-6">
+        <p class="text-base mb-6 text-gray-800">
           You are about to delete: <strong>{{ data.positionName }}</strong>
         </p>
         
         @if (data.hasChildren) {
-          <div class="delete-options">
-            <p class="options-label">This position has child positions. Choose how to proceed:</p>
+          <div class="mb-6">
+            <p class="font-medium mb-4 text-gray-700">This position has child positions. Choose how to proceed:</p>
             
-            <mat-radio-group [formControl]="deleteTypeControl" class="radio-group">
-              <mat-radio-button value="cascade" class="radio-option">
-                <div class="option-content">
-                  <div class="option-title">
-                    <mat-icon>delete_sweep</mat-icon>
+            <mat-radio-group [formControl]="deleteTypeControl" class="flex flex-col gap-4">
+              <mat-radio-button value="cascade" class="border border-gray-200 rounded-lg p-4 transition-all duration-200 hover:border-blue-500 hover:bg-gray-50">
+                <div class="ml-8">
+                  <div class="flex items-center gap-2 font-medium text-gray-800 mb-1">
+                    <mat-icon class="text-xl w-5 h-5">delete_sweep</mat-icon>
                     Cascade Delete
                   </div>
-                  <div class="option-description">
+                  <div class="text-sm text-gray-600 leading-relaxed">
                     Delete this position and all its child positions permanently
                   </div>
                 </div>
               </mat-radio-button>
               
-              <mat-radio-button value="reassign" class="radio-option">
-                <div class="option-content">
-                  <div class="option-title">
-                    <mat-icon>swap_horiz</mat-icon>
+              <mat-radio-button value="reassign" class="border border-gray-200 rounded-lg p-4 transition-all duration-200 hover:border-blue-500 hover:bg-gray-50">
+                <div class="ml-8">
+                  <div class="flex items-center gap-2 font-medium text-gray-800 mb-1">
+                    <mat-icon class="text-xl w-5 h-5">swap_horiz</mat-icon>
                     Reassign and Delete
                   </div>
-                  <div class="option-description">
+                  <div class="text-sm text-gray-600 leading-relaxed">
                     Move child positions to this position's parent, then delete this position
                   </div>
                 </div>
@@ -55,30 +55,28 @@ import type { DeleteOptions } from "../../models/position.model"
             </mat-radio-group>
           </div>
         } @else {
-          <div class="simple-delete">
-            <div class="option-content">
-              <div class="option-title">
-                <mat-icon>delete</mat-icon>
-                Simple Delete
-              </div>
-              <div class="option-description">
-                This position has no children and will be deleted permanently
-              </div>
+          <div class="p-4 border border-gray-200 rounded-lg bg-gray-50 mb-6">
+            <div class="flex items-center gap-2 font-medium text-gray-800 mb-1">
+              <mat-icon class="text-xl w-5 h-5">delete</mat-icon>
+              Simple Delete
+            </div>
+            <div class="text-sm text-gray-600 leading-relaxed">
+              This position has no children and will be deleted permanently
             </div>
           </div>
         }
         
-        <div class="warning-message">
-          <mat-icon>info</mat-icon>
+        <div class="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-sm">
+          <mat-icon class="text-lg w-5 h-5">info</mat-icon>
           <span>This action cannot be undone</span>
         </div>
       </mat-dialog-content>
       
-      <mat-dialog-actions class="dialog-actions">
-        <button mat-button (click)="onCancel()">Cancel</button>
+      <mat-dialog-actions class="p-6 gap-3">
+        <button mat-button (click)="onCancel()" class="min-w-24">Cancel</button>
         <button mat-raised-button color="warn" 
                 [disabled]="data.hasChildren && !deleteTypeControl.value"
-                (click)="onConfirm()">
+                (click)="onConfirm()" class="min-w-32">
           Delete Position
         </button>
       </mat-dialog-actions>
@@ -86,124 +84,11 @@ import type { DeleteOptions } from "../../models/position.model"
   `,
   styles: [
     `
-    .dialog-container {
-      min-width: 400px;
-      max-width: 600px;
+    .mat-radio-checked .border {
+      border-color: #3b82f6 !important;
+      background-color: #dbeafe !important;
     }
-
-    .dialog-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .warning-icon {
-      color: #ff9800;
-      font-size: 32px;
-      width: 32px;
-      height: 32px;
-    }
-
-    .dialog-content {
-      padding: 0 24px;
-    }
-
-    .position-info {
-      font-size: 16px;
-      margin-bottom: 24px;
-      color: #333;
-    }
-
-    .delete-options {
-      margin-bottom: 24px;
-    }
-
-    .options-label {
-      font-weight: 500;
-      margin-bottom: 16px;
-      color: #555;
-    }
-
-    .radio-group {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .radio-option {
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      padding: 16px;
-      transition: all 0.2s ease;
-    }
-
-    .radio-option:hover {
-      border-color: #2196f3;
-      background-color: #f8f9fa;
-    }
-
-    .radio-option.mat-radio-checked {
-      border-color: #2196f3;
-      background-color: #e3f2fd;
-    }
-
-    .option-content {
-      margin-left: 32px;
-    }
-
-    .option-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 500;
-      color: #333;
-      margin-bottom: 4px;
-    }
-
-    .option-title mat-icon {
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
-    }
-
-    .option-description {
-      font-size: 14px;
-      color: #666;
-      line-height: 1.4;
-    }
-
-    .simple-delete {
-      padding: 16px;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      background-color: #f8f9fa;
-      margin-bottom: 24px;
-    }
-
-    .warning-message {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px;
-      background-color: #fff3cd;
-      border: 1px solid #ffeaa7;
-      border-radius: 4px;
-      color: #856404;
-      font-size: 14px;
-    }
-
-    .warning-message mat-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-    }
-
-    .dialog-actions {
-      padding: 16px 24px;
-      gap: 12px;
-    }
-  `,
+    `,
   ],
 })
 export class ConfirmDialogComponent {

@@ -25,35 +25,35 @@ import { PositionService } from "../../services/position.service"
     ReactiveFormsModule,
   ],
   template: `
-    <mat-card class="list-card">
-      <mat-card-header>
+    <mat-card class="h-full flex flex-col">
+      <mat-card-header class="flex items-center justify-between">
         <mat-card-title>All Positions</mat-card-title>
-        <div class="header-actions">
-          <mat-form-field appearance="outline" class="search-field">
+        <div class="ml-auto">
+          <mat-form-field appearance="outline" class="w-80">
             <mat-label>Search positions</mat-label>
-            <input matInput [formControl]="searchControl" placeholder="Search by name or description">
+            <input matInput [formControl]="searchControl" class="focus:outline-none focus:ring-0" placeholder="Search by name or description">
             <mat-icon matSuffix>search</mat-icon>
           </mat-form-field>
         </div>
       </mat-card-header>
-      <mat-card-content>
+      <mat-card-content class="flex-1 overflow-hidden">
         @if (filteredPositions().length === 0) {
-          <div class="empty-state">
-            <mat-icon>list</mat-icon>
+          <div class="flex flex-col items-center justify-center p-10 text-gray-500">
+            <mat-icon class="text-5xl w-12 h-12 mb-4 text-gray-300">list</mat-icon>
             <p>No positions found</p>
           </div>
         } @else {
-          <div class="positions-table">
-            <table mat-table [dataSource]="filteredPositions()" class="full-width-table">
+          <div class="flex-1 overflow-auto custom-scrollbar">
+            <table mat-table [dataSource]="filteredPositions()" class="w-full">
               <ng-container matColumnDef="name">
                 <th mat-header-cell *matHeaderCellDef>Position Name</th>
                 <td mat-cell *matCellDef="let position">
-                  <div class="position-name">
+                  <div class="flex flex-col gap-1">
                     <strong>{{ position.name }}</strong>
                     @if (position.parentName) {
-                      <span class="parent-info">Reports to: {{ position.parentName }}</span>
+                      <span class="text-xs text-gray-600">Reports to: {{ position.parentName }}</span>
                     } @else {
-                      <span class="root-info">Root Position</span>
+                      <span class="text-xs text-purple-600 font-medium">Root Position</span>
                     }
                   </div>
                 </td>
@@ -62,28 +62,31 @@ import { PositionService } from "../../services/position.service"
               <ng-container matColumnDef="description">
                 <th mat-header-cell *matHeaderCellDef>Description</th>
                 <td mat-cell *matCellDef="let position">
-                  <span class="description">{{ position.description || 'No description' }}</span>
+                  <span class="text-gray-600 text-sm">{{ position.description || 'No description' }}</span>
                 </td>
               </ng-container>
 
               <ng-container matColumnDef="children">
                 <th mat-header-cell *matHeaderCellDef>Team Size</th>
                 <td mat-cell *matCellDef="let position">
-                  <span class="team-size">{{ getChildrenCount(position) }} direct reports</span>
+                  <span class="text-gray-800 text-sm">{{ getChildrenCount(position) }} direct reports</span>
                 </td>
               </ng-container>
 
               <ng-container matColumnDef="actions">
                 <th mat-header-cell *matHeaderCellDef>Actions</th>
                 <td mat-cell *matCellDef="let position">
-                  <div class="action-buttons">
-                    <button mat-icon-button (click)="viewPosition(position)" matTooltip="View Details">
+                  <div class="flex gap-1">
+                    <button mat-icon-button (click)="viewPosition(position)" matTooltip="View Details" 
+                            class="text-gray-600 hover:text-blue-600">
                       <mat-icon>visibility</mat-icon>
                     </button>
-                    <button mat-icon-button (click)="editPosition(position)" matTooltip="Edit Position">
+                    <button mat-icon-button (click)="editPosition(position)" matTooltip="Edit Position"
+                            class="text-gray-600 hover:text-green-600">
                       <mat-icon>edit</mat-icon>
                     </button>
-                    <button mat-icon-button color="warn" (click)="deletePosition(position)" matTooltip="Delete Position">
+                    <button mat-icon-button color="warn" (click)="deletePosition(position)" matTooltip="Delete Position"
+                            class="text-gray-600 hover:text-red-600">
                       <mat-icon>delete</mat-icon>
                     </button>
                   </div>
@@ -92,7 +95,8 @@ import { PositionService } from "../../services/position.service"
 
               <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
               <tr mat-row *matRowDef="let row; columns: displayedColumns;" 
-                  [class.selected-row]="selectedPosition()?.id === row.id"
+                  [class.bg-blue-50]="selectedPosition()?.id === row.id"
+                  class="hover:bg-gray-200 cursor-pointer"
                   (click)="viewPosition(row)"></tr>
             </table>
           </div>
@@ -100,89 +104,7 @@ import { PositionService } from "../../services/position.service"
       </mat-card-content>
     </mat-card>
   `,
-  styles: [
-    `
-    .list-card {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .header-actions {
-      margin-left: auto;
-    }
-
-    .search-field {
-      width: 300px;
-    }
-
-    .positions-table {
-      flex: 1;
-      overflow: auto;
-    }
-
-    .full-width-table {
-      width: 100%;
-    }
-
-    .position-name {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .parent-info {
-      font-size: 12px;
-      color: #666;
-    }
-
-    .root-info {
-      font-size: 12px;
-      color: #7b1fa2;
-      font-weight: 500;
-    }
-
-    .description {
-      color: #666;
-      font-size: 14px;
-    }
-
-    .team-size {
-      color: #333;
-      font-size: 14px;
-    }
-
-    .action-buttons {
-      display: flex;
-      gap: 4px;
-    }
-
-    .selected-row {
-      background-color: #e3f2fd;
-    }
-
-    .mat-mdc-row:hover {
-      background-color: #f5f5f5;
-    }
-
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 40px;
-      color: #666;
-    }
-
-    .empty-state mat-icon {
-      font-size: 48px;
-      width: 48px;
-      height: 48px;
-      margin-bottom: 16px;
-      color: #ccc;
-    }
-  `,
-  ],
+  styles: [],
 })
 export class PositionListComponent implements OnInit {
   private positionService = inject(PositionService)
@@ -222,6 +144,7 @@ export class PositionListComponent implements OnInit {
   }
 
   viewPosition(position: Position): void {
+    this.positionService.setEditMode(false)
     this.positionService.selectPosition(position)
   }
 
@@ -231,7 +154,6 @@ export class PositionListComponent implements OnInit {
   }
 
   deletePosition(position: Position): void {
-    // This will be handled by the parent component
     this.positionService.requestDelete(position)
   }
 }

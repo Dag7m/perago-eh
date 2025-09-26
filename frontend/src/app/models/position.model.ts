@@ -5,6 +5,7 @@ export interface Position {
   parentId?: string
   parentName?: string
   children?: Position[]
+  level?: number
 }
 
 export interface CreatePositionDto {
