@@ -4,14 +4,27 @@
 
 /* Custom base styles */
 @layer base {
-  
+  *,
+  ::before,
+  ::after {
+    border-style: none; /* Reset the default border-style from Tailwind preflight */
+  }
   
   body {
     @apply font-sans bg-gray-50 text-gray-900 antialiased;
   }
+
 }
 
+.mat-mdc-text-field-wrapper {
+  .mdc-notched-outline {
+    border-style: solid; /* Restore the correct border style for the form field outline */
+  }
 
+  .mdc-notched-outline__notch {
+    border-right-style: hidden; /* hides the extra line at the notch */
+  }
+}
 
 /* Custom component styles */
 @layer components {
