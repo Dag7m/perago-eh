@@ -140,7 +140,7 @@ export class PositionListComponent implements OnInit {
   }
 
   getChildrenCount(position: Position): number {
-    return position.children?.length || 0
+    return this.allPositions().filter((p) => p.parentId === position.id).length
   }
 
   viewPosition(position: Position): void {
