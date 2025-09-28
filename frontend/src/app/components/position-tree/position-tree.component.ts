@@ -150,9 +150,10 @@ export class PositionTreeComponent implements OnInit {
 
       if (positions.length > 0) {
         setTimeout(() => {
-          this.treeControl.expandAll()
+          // this.treeControl.expandAll()
           console.log("[v0] Tree expanded all nodes")
         }, 100)
+        
       }
     })
 
@@ -179,4 +180,5 @@ export class PositionTreeComponent implements OnInit {
   onDeletePosition(position: Position): void {
     this.deleteRequested.emit(position)
   }
+  
 }
